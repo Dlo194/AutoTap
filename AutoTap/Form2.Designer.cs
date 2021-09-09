@@ -38,6 +38,8 @@
             this.ClientSize = new System.Drawing.Size(357, 211);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "Form2";
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             this.Text = "Form2";
             this.TopMost = true;
             this.TransparencyKey = System.Drawing.Color.Salmon;
