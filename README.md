@@ -1,7 +1,7 @@
-# Auto-Tap
+# AutoTap
 WinForms Auto Tap Application 
 
-Using an extended and fixed version of the WindowHookLib library
+Using an extended and fixed version of the WindowsHookLib library: https://www.codeproject.com/Articles/19858/Global-Windows-Hooks
 With suggestions from: https://www.unknowncheats.me/forum/c-/206117-basic-simple-overlay-guide.html
 
 Usage:
