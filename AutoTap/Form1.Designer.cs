@@ -102,7 +102,7 @@ namespace AutoTap
             // 
             this.udTime.Location = new System.Drawing.Point(167, 277);
             this.udTime.Maximum = new decimal(new int[] {
-            100000,
+            1000000,
             0,
             0,
             0});
@@ -183,6 +183,7 @@ namespace AutoTap
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(239, 339);
             this.Controls.Add(this.udY);
             this.Controls.Add(this.udX);
@@ -194,13 +195,14 @@ namespace AutoTap
             this.Controls.Add(this.lstPoints);
             this.Controls.Add(this.cmbWindows);
             this.Controls.Add(this.menuStrip1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Auto Tap";
             this.TopMost = true;
+            this.Resize += new System.EventHandler(this.Form1_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.udTime)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

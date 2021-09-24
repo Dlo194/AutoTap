@@ -78,7 +78,7 @@ namespace AutoTap
         private void MouseHook1_MouseClick(object sender, MouseEventArgs e)
         {
             MouseHook1.MouseClick -= MouseHook1_MouseClick;
-            lstPoints.Items.Add($"{e.X - rect.Left} , {e.Y - rect.Top} 1000");
+            lstPoints.Items.Add($"{lstPoints.Items.Count+1}: {e.X - rect.Left} , {e.Y - rect.Top} 1000");
             ResetCursor();
         }
         #endregion
@@ -96,14 +96,13 @@ namespace AutoTap
                 udX.Maximum = rect.Right - rect.Left;
                 udY.Maximum = rect.Bottom - rect.Top;
 
-                DisplayForm.Size = new Size(rect.Right - rect.Left, rect.Bottom - rect.Top);
                 DisplayForm.Top = rect.Top;
                 DisplayForm.Left = rect.Left;
+                DisplayForm.Size = new Size(rect.Right - rect.Left, rect.Bottom - rect.Top);
 
                 if (!DisplayForm.Visible)
                 {
                     timer1.Enabled = true;
-                    DisplayForm.Show(this);
                 }
             }
         }
@@ -112,9 +111,9 @@ namespace AutoTap
         {
             IntPtr curhandle = WindowsHook.UnsafeNativeMethods.GetForegroundWindow();
             WindowsHook.UnsafeNativeMethods.GetWindowRect(hWnd, ref rect);
-            DisplayForm.Size = new Size(rect.Right - rect.Left, rect.Bottom - rect.Top);
             DisplayForm.Top = rect.Top;
             DisplayForm.Left = rect.Left;
+            DisplayForm.Size = new Size(rect.Right - rect.Left, rect.Bottom - rect.Top);
 
             string disp = $"{rect.Left}, {rect.Top}, {rect.Right - rect.Left}, {rect.Bottom - rect.Top}";
             if (disp != lblSelectedWindow.Text) lblSelectedWindow.Text = disp;
@@ -127,7 +126,18 @@ namespace AutoTap
             }
             else
             {
-                if (!DisplayForm.Visible) DisplayForm.Show();
+                if (!DisplayForm.Visible && this.WindowState!=FormWindowState.Minimized) DisplayForm.Show(this);
+            }
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            if (DisplayForm != null)
+            {
+                if (this.WindowState == FormWindowState.Minimized)
+                    DisplayForm.Visible = false;
+                else
+                    DisplayForm.Visible = true;
             }
         }
         #endregion
@@ -168,9 +178,9 @@ namespace AutoTap
             if (lstPoints.SelectedIndex >= 0)
             {
                 string[] pnt = lstPoints.SelectedItem.ToString().Split(' ');
-                udTime.Value = decimal.Parse(pnt[3]);
-                udX.Value = decimal.Parse(pnt[0]);
-                udY.Value = decimal.Parse(pnt[2]);
+                udTime.Value = decimal.Parse(pnt[4]);
+                udX.Value = decimal.Parse(pnt[1]);
+                udY.Value = decimal.Parse(pnt[3]);
             }
         }
 
@@ -179,7 +189,7 @@ namespace AutoTap
             if (lstPoints.SelectedItem != null)
             {
                 string[] pnt = lstPoints.SelectedItem.ToString().Split(' ');
-                lstPoints.Items[lstPoints.SelectedIndex] = $"{pnt[0]} , {pnt[2]} {udTime.Value}";
+                lstPoints.Items[lstPoints.SelectedIndex] = $"{lstPoints.SelectedIndex+1}: {pnt[1]} , {pnt[3]} {udTime.Value}";
             }
         }
 
@@ -193,7 +203,7 @@ namespace AutoTap
             if (lstPoints.SelectedItem != null)
             {
                 string[] pnt = lstPoints.SelectedItem.ToString().Split(' ');
-                lstPoints.Items[lstPoints.SelectedIndex] = $"{udX.Value} , {pnt[2]} {pnt[3]}";
+                lstPoints.Items[lstPoints.SelectedIndex] = $"{lstPoints.SelectedIndex+1}: {udX.Value} , {pnt[3]} {pnt[4]}";
             }
         }
 
@@ -207,7 +217,7 @@ namespace AutoTap
             if (lstPoints.SelectedItem != null)
             {
                 string[] pnt = lstPoints.SelectedItem.ToString().Split(' ');
-                lstPoints.Items[lstPoints.SelectedIndex] = $"{pnt[0]} , {udY.Value} {pnt[3]}";
+                lstPoints.Items[lstPoints.SelectedIndex] = $"{lstPoints.SelectedIndex+1}: {pnt[1]} , {udY.Value} {pnt[4]}";
             }
         }
 
@@ -255,7 +265,7 @@ namespace AutoTap
                 {
                     foreach (string i in lstPoints.Items)
                     {
-                        writetext.WriteLine(i);
+                        writetext.WriteLine(i.Substring(i.IndexOf(": ")));
                     }
                 }
             }
@@ -274,7 +284,7 @@ namespace AutoTap
                     string line;
                     while ((line = readtext.ReadLine()) != null)
                     {
-                        lstPoints.Items.Add(line);
+                        lstPoints.Items.Add($"{lstPoints.Items.Count+1}: {line}");
                     }
                 }
             }
@@ -284,35 +294,67 @@ namespace AutoTap
         #region " Methods "
         private void PlayPoints()
         {
+            int i = 0;
+            if (sIndex > 0) i = sIndex;
             SetCursor();
             while (doLoop)
             {
-                foreach (string i in lstPoints.Items)
+                while(i<lstPoints.Items.Count)
                 {
-                    string[] pnt = i.Split(' ');
-                    Point p = new Point(rect.Left + int.Parse(pnt[0]), rect.Top + int.Parse(pnt[2]));
+                    string[] pnt =lstPoints.Items[i].ToString().Split(' ');
+                    Point p = new Point(rect.Left + int.Parse(pnt[1]), rect.Top + int.Parse(pnt[3]));
 
+                    sIndex = i;
                     WindowsHook.MouseHook.SynthesizeMouseMove(p, WindowsHook.MapOn.PrimaryMonitor, IntPtr.Zero);
                     WindowsHook.MouseHook.SynthesizeMouseDown(System.Windows.Forms.MouseButtons.Left, IntPtr.Zero);
                     WindowsHook.MouseHook.SynthesizeMouseUp(System.Windows.Forms.MouseButtons.Left, IntPtr.Zero);
-                    System.Threading.Thread.Sleep(int.Parse(pnt[3]));
+                    System.Threading.Thread.Sleep(int.Parse(pnt[4]));
 
                     if (!doLoop) break;
+                    i++;
                 }
+                i = 0;
             }
             ResetCursor();
         }
 
+        private int sIndex {
+            get
+            {
+                if (lstPoints.InvokeRequired)
+                    return (int)this.Invoke(new Func<int>(() => this.sIndex));
+                else
+                    return lstPoints.SelectedIndex;
+            }
+            set
+            {
+                if (lstPoints.InvokeRequired)
+                    this.Invoke(new Func<int>(() => this.sIndex=value));
+                else
+                    lstPoints.SelectedIndex=value;
+            }
+        }
+
         public void DrawDots(Graphics g)
         {
+            System.Drawing.Font drawFont = new System.Drawing.Font("Calibri", 12,FontStyle.Bold);
+            Pen borderPen = new Pen(Color.Blue,2);
+            int c = 1;
             foreach (string i in lstPoints.Items)
             {
                 string[] pnts = i.Split(' ');
-                Point pnt = new Point(int.Parse(pnts[0]) - 16, int.Parse(pnts[2]) - 16);
+                Point pnt = new Point(int.Parse(pnts[1]) - 16, int.Parse(pnts[3]) - 16);
                 g.DrawImage(img, pnt);
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixel;
+                g.DrawString(c.ToString(), drawFont, Brushes.Blue, float.Parse(pnts[1]) + 8, float.Parse(pnts[3]) - 20);
+                c++;
             }
+            if (doLoop) borderPen.Color = Color.Red;
+            g.DrawRectangle(borderPen, 0,0,g.VisibleClipBounds.Width,g.VisibleClipBounds.Height);
+
+            drawFont.Dispose();
+            borderPen.Dispose();
         }
         #endregion
-
     }
 }
