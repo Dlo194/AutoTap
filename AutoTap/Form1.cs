@@ -46,7 +46,8 @@ namespace AutoTap
             Dictionary<Int32, string> results = new Dictionary<Int32, string>();
 
             Process[] processlist = Process.GetProcesses();
-            results.Add(0, "<please select>");
+            results.Add(0, "< please select >");
+            results.Add(-1, "< refresh list >");
             foreach (Process process in processlist)
             {
                 if (!String.IsNullOrEmpty(process.MainWindowTitle))
@@ -86,7 +87,7 @@ namespace AutoTap
         #region " Maintains DisplayForm "
         private void cmbWindows_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cmbWindows.SelectedIndex > 0)
+            if (cmbWindows.SelectedIndex > 1)
             {
                 Process p = Process.GetProcessById((int)cmbWindows.SelectedValue);
                 hWnd = p.MainWindowHandle;
@@ -104,6 +105,12 @@ namespace AutoTap
                 {
                     timer1.Enabled = true;
                 }
+            }
+            else
+            {
+                cmbWindows.DataSource = new BindingSource(WindowList(), null);
+                DisplayForm.Visible = false;
+                timer1.Enabled = false;
             }
         }
 
@@ -151,6 +158,7 @@ namespace AutoTap
 
             tPlay = new Thread(PlayPoints);
             tPlay.Start();
+            ResetCursor();
         }
 
         private void MouseHook1_MouseClickCancel(object sender, MouseEventArgs e)
@@ -159,6 +167,9 @@ namespace AutoTap
             {
                 doLoop = false;
                 this.Text = "Auto Tap";
+
+                tPlay.Abort();
+                ResetCursor();
             }
         }
 
@@ -168,6 +179,8 @@ namespace AutoTap
             {
                 doLoop = false;
                 this.Text = "Auto Tap";
+
+                tPlay.Abort();
             }
         }
         #endregion
@@ -338,7 +351,7 @@ namespace AutoTap
         public void DrawDots(Graphics g)
         {
             System.Drawing.Font drawFont = new System.Drawing.Font("Calibri", 12,FontStyle.Bold);
-            Pen borderPen = new Pen(Color.Blue,2);
+            Pen borderPen = new Pen(Color.Blue,5);
             int c = 1;
             foreach (string i in lstPoints.Items)
             {
